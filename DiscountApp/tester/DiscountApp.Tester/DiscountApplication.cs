@@ -105,7 +105,7 @@ public class DiscountApplication
         request[3] = length;
 
         // Send request
-        await stream.WriteAsync(request, 0, request.Length);
+        await stream.WriteAsync(request);
         Console.WriteLine($"Sent generate request: Count={count}, Length={length}");
 
         // Read response
@@ -119,7 +119,7 @@ public class DiscountApplication
         var result = await ReadByteAsync(stream);
         if (result == 0x00)
         {
-            Console.WriteLine("❌ Generate request failed");
+            Console.WriteLine("Generate request failed");
             return;
         }
 
@@ -128,7 +128,7 @@ public class DiscountApplication
         for (int i = 0; i < count; i++)
         {
             var codeBytes = new byte[8];
-            await stream.ReadAsync(codeBytes, 0, 8);
+            await stream.ReadExactlyAsync(codeBytes.AsMemory(0, 8));
             var code = Encoding.UTF8.GetString(codeBytes).Trim();
             codes.Add(code);
         }
@@ -171,19 +171,19 @@ public class DiscountApplication
         switch (resultCode)
         {
             case 0x00:
-                Console.WriteLine("✅ Code used successfully");
+                Console.WriteLine("Code used successfully");
                 break;
             case 0x01:
-                Console.WriteLine("❌ Invalid code");
+                Console.WriteLine("Invalid code");
                 break;
             case 0x02:
-                Console.WriteLine("❌ Code already used");
+                Console.WriteLine("Code already used");
                 break;
             case 0x03:
-                Console.WriteLine("❌ Server error");
+                Console.WriteLine("Server error");
                 break;
             default:
-                Console.WriteLine($"❌ Unknown result code: 0x{resultCode:X2}");
+                Console.WriteLine($"Unknown result code: 0x{resultCode:X2}");
                 break;
         }
     }
@@ -191,7 +191,7 @@ public class DiscountApplication
     static async Task<byte> ReadByteAsync(NetworkStream stream)
     {
         var buffer = new byte[1];
-        await stream.ReadAsync(buffer, 0, 1);
+        await stream.ReadExactlyAsync(buffer.AsMemory(0, 1));
         return buffer[0];
     }
 }
